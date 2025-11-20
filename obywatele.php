@@ -3047,35 +3047,6 @@ try {
                 closeModal();
             });
         }
-        
-        // Expose to global scope
-        window.showCitizenDetails = showCitizenDetails;
-        window.closeModal = closeModal;
-        window._openVerdictModal = openVerdictModal;
-        window._closeVerdictModal = closeVerdictModal;
-        window._openNoteModal = openNoteModal;
-        window._closeNoteModal = closeNoteModal;
-        window._openWantedModal = openWantedModal;
-        window._closeWantedModal = closeWantedModal;
-        window._closeDetailModal = closeDetailModal;
-        window._closeDeleteModal = closeDeleteModal;
-        window.toggleCharge = toggleCharge;
-        window.toggleWantedCharge = toggleWantedCharge;
-        window.changeQuantity = changeQuantity;
-        window.setQuantity = setQuantity;
-        window.removeCharge = removeCharge;
-        window.changeWantedQuantity = changeWantedQuantity;
-        window.setWantedQuantity = setWantedQuantity;
-        window.removeWantedCharge = removeWantedCharge;
-        window.selectWarrant = selectWarrant;
-        window._saveVerdict = saveVerdict;
-        window._saveWantedCharges = saveWantedCharges;
-        window._confirmDelete = confirmDelete;
-        window.openDeleteModal = openDeleteModal;
-        window._showVerdictDetails = showVerdictDetails;
-        window._showNoteDetails = showNoteDetails;
-        window._showWantedDetails = showWantedDetails;
-        window.openVehicleDetails = openVehicleDetails;
 
         document.addEventListener('DOMContentLoaded', function() {
             setupPrioritySelectors();
@@ -4327,7 +4298,36 @@ try {
                 else if (document.getElementById('citizenModal').classList.contains('show')) closeModal();
             }
         });
-        
+
+        // Expose to global scope - MUST be after all function definitions
+        window.showCitizenDetails = showCitizenDetails;
+        window.closeModal = closeModal;
+        window._openVerdictModal = openVerdictModal;
+        window._closeVerdictModal = closeVerdictModal;
+        window._openNoteModal = openNoteModal;
+        window._closeNoteModal = closeNoteModal;
+        window._openWantedModal = openWantedModal;
+        window._closeWantedModal = closeWantedModal;
+        window._closeDetailModal = closeDetailModal;
+        window._closeDeleteModal = closeDeleteModal;
+        window.toggleCharge = toggleCharge;
+        window.toggleWantedCharge = toggleWantedCharge;
+        window.changeQuantity = changeQuantity;
+        window.setQuantity = setQuantity;
+        window.removeCharge = removeCharge;
+        window.changeWantedQuantity = changeWantedQuantity;
+        window.setWantedQuantity = setWantedQuantity;
+        window.removeWantedCharge = removeWantedCharge;
+        window.selectWarrant = selectWarrant;
+        window._saveVerdict = saveVerdict;
+        window._saveWantedCharges = saveWantedCharges;
+        window._confirmDelete = confirmDelete;
+        window.openDeleteModal = openDeleteModal;
+        window._showVerdictDetails = showVerdictDetails;
+        window._showNoteDetails = showNoteDetails;
+        window._showWantedDetails = showWantedDetails;
+        window.openVehicleDetails = openVehicleDetails;
+
         console.log('Citizens management system v2.0 loaded successfully');
         console.log('User is admin:', userIsAdmin);
     </script>
