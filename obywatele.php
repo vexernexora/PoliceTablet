@@ -4236,6 +4236,37 @@ try {
             }, 4000);
         }
 
+        // ===== EXPORTS TO GLOBAL SCOPE (after all functions defined) =====
+        window.showCitizenDetails = showCitizenDetails;
+        window.openVerdictModal = openVerdictModal;
+        window.closeVerdictModal = closeVerdictModal;
+        window.openNoteModal = openNoteModal;
+        window.closeNoteModal = closeNoteModal;
+        window.openWantedModal = openWantedModal;
+        window.closeWantedModal = closeWantedModal;
+        window.closeDetailModal = closeDetailModal;
+        window.openDeleteModal = openDeleteModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.closeModal = closeModal;
+        window.toggleCharge = toggleCharge;
+        window.changeQuantity = changeQuantity;
+        window.setQuantity = setQuantity;
+        window.removeCharge = removeCharge;
+        window.saveVerdict = saveVerdict;
+        window.toggleWantedCharge = toggleWantedCharge;
+        window.changeWantedQuantity = changeWantedQuantity;
+        window.setWantedQuantity = setWantedQuantity;
+        window.removeWantedCharge = removeWantedCharge;
+        window.saveWantedCharges = saveWantedCharges;
+        window.showVerdictDetails = showVerdictDetails;
+        window.showNoteDetails = showNoteDetails;
+        window.showWantedDetails = showWantedDetails;
+        window.selectWarrant = selectWarrant;
+        window.openVehicleDetails = openVehicleDetails;
+        window.confirmDelete = confirmDelete;
+        window.filterCharges = filterCharges;
+        window.filterWantedCharges = filterWantedCharges;
+
         console.log('Citizens management system loaded successfully');
         console.log('User is admin:', userIsAdmin);
     </script>
