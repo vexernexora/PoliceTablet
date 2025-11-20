@@ -4224,34 +4224,6 @@ try {
             currentCitizenData = null;
         }
         
-        function openNoteModal() {
-            if (!currentCitizenId) return;
-            document.getElementById('noteModal').classList.add('show');
-            const modal = document.getElementById('noteModal');
-            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
-            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
-            document.getElementById('notePriority').value = 'normal';
-        }
-        
-        function closeNoteModal() {
-            document.getElementById('noteModal').classList.remove('show');
-            document.getElementById('noteForm').reset();
-        }
-        
-        function openWantedModal() {
-            if (!currentCitizenId) return;
-            document.getElementById('wantedModal').classList.add('show');
-            const modal = document.getElementById('wantedModal');
-            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
-            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
-            document.getElementById('wantedPriority').value = 'normal';
-        }
-        
-        function closeWantedModal() {
-            document.getElementById('wantedModal').classList.remove('show');
-            document.getElementById('wantedForm').reset();
-        }
-        
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
