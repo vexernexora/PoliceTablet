@@ -2420,16 +2420,6 @@ try {
             }});
         }
         function closeModal(){document.getElementById('citizenModal').classList.remove('show');document.body.style.overflow='';}
-        function openVerdictModal(){document.getElementById('verdictModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('chargesGrid').innerHTML=html;}});}
-        function openNoteModal(){document.getElementById('noteModal').classList.add('show');document.body.style.overflow='hidden';}
-        function openWantedModal(){document.getElementById('wantedModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('wantedChargesGrid').innerHTML=html;}});}
-        function showVerdictDetails(id){document.getElementById('detailModalTitle').textContent='Szczegóły wyroku #'+id;document.getElementById('detailModalContent').innerHTML='<div class="loading">Ładowanie szczegółów...</div>';document.getElementById('detailModal').classList.add('show');}
-        function showNoteDetails(title,content,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły notatki';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Tytuł</div><div class="detail-value">${title}</div></div><div class="detail-item"><div class="detail-label">Data</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${content?`<div class="detail-section"><h4>Treść</h4><div class="detail-item"><div class="detail-value">${content}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
-        function showWantedDetails(reason,details,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły poszukiwania';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Powód poszukiwania</div><div class="detail-value">${reason}</div></div><div class="detail-item"><div class="detail-label">Data dodania</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${details?`<div class="detail-section"><h4>Szczegóły</h4><div class="detail-item"><div class="detail-value">${details}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
-        function closeDetailModal(){document.getElementById('detailModal').classList.remove('show');}
-        function closeVerdictModal(){document.getElementById('verdictModal').classList.remove('show');document.body.style.overflow='';}
-        function closeNoteModal(){document.getElementById('noteModal').classList.remove('show');document.body.style.overflow='';}
-        function closeWantedModal(){document.getElementById('wantedModal').classList.remove('show');document.body.style.overflow='';}
     </script>
 </head>
 <body>
@@ -3410,42 +3400,6 @@ try {
                 updateWantedSaveButton();
             });
         }
-            const searchInput = document.getElementById('chargesSearch');
-            if (searchInput) {
-                searchInput.addEventListener('input', filterCharges);
-            }
-
-            const locationInput = document.getElementById('verdictLocation');
-            const fineInput = document.getElementById('totalFineInput');
-            const monthsInput = document.getElementById('sentenceMonthsInput');
-            
-            if (locationInput) {
-                locationInput.addEventListener('input', updateSaveButton);
-            }
-            if (fineInput) {
-                fineInput.addEventListener('input', updateSaveButton);
-            }
-            if (monthsInput) {
-                monthsInput.addEventListener('input', updateSaveButton);
-            }
-        }
-
-        function openVerdictModal() {
-            if (!currentCitizenId) return;
-            
-            document.getElementById('verdictModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-            
-            loadCharges();
-            loadActiveWarrants();
-            selectedCharges = [];
-            updateSelectedItems();
-            document.getElementById('verdictLocation').value = '';
-            document.getElementById('totalFineInput').value = '';
-            document.getElementById('sentenceMonthsInput').value = '0';
-            document.getElementById('verdictNotes').value = '';
-            updateSaveButton();
-        }
 
         function loadActiveWarrants() {
             fetch('', {
@@ -3528,76 +3482,6 @@ try {
             document.body.style.overflow = '';
             selectedCharges = [];
             updateSelectedItems();
-        }
-
-        function loadCharges() {
-            fetch('', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=get_charges'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    availableCharges = data.charges;
-                    filteredCharges = [...availableCharges];
-                    renderCharges();
-                } else {
-                    document.getElementById('chargesGrid').innerHTML = 
-                        '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading charges:', error);
-                document.getElementById('chargesGrid').innerHTML = 
-                    '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
-            });
-        }
-
-        function filterCharges() {
-            const searchTerm = document.getElementById('chargesSearch').value.toLowerCase();
-            
-            filteredCharges = availableCharges.filter(charge => {
-                return charge.code.toLowerCase().includes(searchTerm) ||
-                       charge.nazwa.toLowerCase().includes(searchTerm) ||
-                       (charge.opis && charge.opis.toLowerCase().includes(searchTerm)) ||
-                       (charge.kategoria && charge.kategoria.toLowerCase().includes(searchTerm));
-            });
-            
-            renderCharges();
-        }
-
-        function renderCharges() {
-            const grid = document.getElementById('chargesGrid');
-            
-            if (filteredCharges.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #9ca3af; font-size: 18px;">Nie znaleziono zarzutów</div>';
-                return;
-            }
-            
-            grid.innerHTML = filteredCharges.map(charge => {
-                const isFineOnly = parseInt(charge.miesiace_odsiadki) === 0;
-                const cardClass = `charge-card ${isFineOnly ? 'fine-only' : ''} ${isChargeSelected(charge.id) ? 'selected' : ''}`;
-                const monthsClass = isFineOnly ? 'charge-months fine-only' : 'charge-months';
-                const monthsText = isFineOnly ? 'Mandat' : `${charge.miesiace_odsiadki} mies.`;
-                
-                return `
-                    <div class="${cardClass}" 
-                         onclick="toggleCharge(${charge.id})"
-                         data-charge-id="${charge.id}">
-                        <div class="charge-code">${charge.code}</div>
-                        <div class="charge-name">${charge.nazwa}</div>
-                        <div class="charge-details">
-                            <div class="charge-amount">$${parseFloat(charge.kara_pieniezna).toFixed(2)}</div>
-                            <div class="${monthsClass}">${monthsText}</div>
-                        </div>
-                        <div class="charge-category">${charge.kategoria || 'Misdemeanor'}</div>
-                        <div class="charge-description">${charge.opis || 'Brak opisu'}</div>
-                    </div>
-                `;
-            }).join('');
         }
 
         function toggleCharge(chargeId) {
