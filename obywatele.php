@@ -2924,22 +2924,30 @@ try {
     </div>
     
     <script>
+        // ===== GLOBAL STATE =====
         let currentCitizenId = null;
         let currentCitizenData = null;
         let currentDeleteItemId = null;
         let currentDeleteType = null;
         let userIsAdmin = <?php echo $is_admin ? 'true' : 'false'; ?>;
-        
         let availableCharges = [];
         let selectedCharges = [];
         let filteredCharges = [];
-        
-        // Wanted charges system
         let selectedWantedCharges = [];
         let filteredWantedCharges = [];
         let activeWarrants = [];
 
-        // Define main functions first
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPrioritySelectors();
+            setupVerdictModal();
+            setupWantedModal();
+            document.getElementById('noteForm').addEventListener('submit', handleNoteSubmit);
+            setupModalClickHandlers();
+            setupEscapeKeyHandler();
+        });
+
+        // ===== CITIZEN MODAL =====
         function showCitizenDetails(citizenId) {
             currentCitizenId = citizenId;
             document.getElementById('citizenModal').classList.add('show');
@@ -2995,25 +3003,15 @@ try {
             });
         }
         
-        // Expose to global scope
-        window.showCitizenDetails = showCitizenDetails;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            setupPrioritySelectors();
-            setupVerdictModal();
-            setupWantedModal();
-        });
-
+        // ===== MODAL FUNCTIONS - VERDICT =====
         function setupVerdictModal() {
             const searchInput = document.getElementById('chargesSearch');
             if (searchInput) {
                 searchInput.addEventListener('input', filterCharges);
             }
-
             const locationInput = document.getElementById('verdictLocation');
             const fineInput = document.getElementById('totalFineInput');
             const monthsInput = document.getElementById('sentenceMonthsInput');
-
             if (locationInput) {
                 locationInput.addEventListener('input', updateSaveButton);
             }
@@ -3025,49 +3023,72 @@ try {
             }
         }
 
-        // Export functions to global scope
-        window.closeVerdictModal = closeVerdictModal;
-        window.closeDetailModal = closeDetailModal;
-        window.closeNoteModal = closeNoteModal;
-        window.closeWantedModal = closeWantedModal;
-        window.closeDeleteModal = closeDeleteModal;
-        window.showVerdictDetails = showVerdictDetails;
-        window.showNoteDetails = showNoteDetails;
-        window.showWantedDetails = showWantedDetails;
-        window.openVerdictModal = openVerdictModal;
-        window.openNoteModal = openNoteModal;
-        window.openWantedModal = openWantedModal;
-        window.openDeleteModal = openDeleteModal;
-        window.confirmDelete = confirmDelete;
-        window.toggleCharge = toggleCharge;
-        window.changeQuantity = changeQuantity;
-        window.setQuantity = setQuantity;
-        window.removeCharge = removeCharge;
-        window.saveVerdict = saveVerdict;
-        window.toggleWantedCharge = toggleWantedCharge;
-        window.changeWantedQuantity = changeWantedQuantity;
-        window.setWantedQuantity = setWantedQuantity;
-        window.removeWantedCharge = removeWantedCharge;
-        window.saveWantedCharges = saveWantedCharges;
-        window.selectWarrant = selectWarrant;
-        window.openVehicleDetails = openVehicleDetails;
-        window.closeModal = closeModal;
-
         function setupWantedModal() {
             const searchInput = document.getElementById('wantedChargesSearch');
             if (searchInput) {
                 searchInput.addEventListener('input', filterWantedCharges);
             }
-
             const detailsInput = document.getElementById('wantedDetails');
             const officerInput = document.getElementById('wantedOfficer');
-            
             if (detailsInput) {
                 detailsInput.addEventListener('input', updateWantedSaveButton);
             }
             if (officerInput) {
                 officerInput.addEventListener('input', updateWantedSaveButton);
             }
+        }
+
+        function setupModalClickHandlers() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal-overlay')) {
+                    if (e.target.id === 'citizenModal') closeModal();
+                    if (e.target.id === 'verdictModal') closeVerdictModal();
+                    if (e.target.id === 'detailModal') closeDetailModal();
+                    if (e.target.id === 'noteModal') closeNoteModal();
+                    if (e.target.id === 'wantedModal') closeWantedModal();
+                    if (e.target.id === 'deleteModal') closeDeleteModal();
+                }
+            });
+        }
+
+        function setupEscapeKeyHandler() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('verdictModal').classList.contains('show')) closeVerdictModal();
+                    else if (document.getElementById('detailModal').classList.contains('show')) closeDetailModal();
+                    else if (document.getElementById('deleteModal').classList.contains('show')) closeDeleteModal();
+                    else if (document.getElementById('noteModal').classList.contains('show')) closeNoteModal();
+                    else if (document.getElementById('wantedModal').classList.contains('show')) closeWantedModal();
+                    else if (document.getElementById('citizenModal').classList.contains('show')) closeModal();
+                }
+            });
+        }
+
+        function handleNoteSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('action', 'add_note');
+            formData.append('citizen_id', currentCitizenId);
+            formData.append('title', document.getElementById('noteTitle').value);
+            formData.append('content', document.getElementById('noteContent').value);
+            formData.append('officer', document.getElementById('noteOfficer').value);
+            formData.append('priority', document.getElementById('notePriority').value);
+
+            fetch('', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeNoteModal();
+                    showSuccess(data.message);
+                    setTimeout(() => showCitizenDetails(currentCitizenId), 500);
+                } else {
+                    alert('Błąd: ' + (data.message || 'Nieznany błąd'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Wystąpił błąd podczas dodawania notatki');
+            });
         }
 
         function openVerdictModal() {
@@ -3197,6 +3218,45 @@ try {
                 document.getElementById('chargesGrid').innerHTML =
                     '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
             });
+        }
+
+        function filterCharges() {
+            const searchTerm = document.getElementById('chargesSearch').value.toLowerCase();
+            filteredCharges = availableCharges.filter(charge => {
+                return charge.code.toLowerCase().includes(searchTerm) ||
+                       charge.nazwa.toLowerCase().includes(searchTerm) ||
+                       (charge.opis && charge.opis.toLowerCase().includes(searchTerm)) ||
+                       (charge.kategoria && charge.kategoria.toLowerCase().includes(searchTerm));
+            });
+            renderCharges();
+        }
+
+        function renderCharges() {
+            const grid = document.getElementById('chargesGrid');
+            if (filteredCharges.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #9ca3af; font-size: 18px;">Nie znaleziono zarzutów</div>';
+                return;
+            }
+            grid.innerHTML = filteredCharges.map(charge => {
+                const isFineOnly = parseInt(charge.miesiace_odsiadki) === 0;
+                const cardClass = `charge-card ${isFineOnly ? 'fine-only' : ''} ${isChargeSelected(charge.id) ? 'selected' : ''}`;
+                const monthsClass = isFineOnly ? 'charge-months fine-only' : 'charge-months';
+                const monthsText = isFineOnly ? 'Mandat' : `${charge.miesiace_odsiadki} mies.`;
+                return `
+                    <div class="${cardClass}"
+                         onclick="toggleCharge(${charge.id})"
+                         data-charge-id="${charge.id}">
+                        <div class="charge-code">${charge.code}</div>
+                        <div class="charge-name">${charge.nazwa}</div>
+                        <div class="charge-details">
+                            <div class="charge-amount">$${parseFloat(charge.kara_pieniezna).toFixed(2)}</div>
+                            <div class="${monthsClass}">${monthsText}</div>
+                        </div>
+                        <div class="charge-category">${charge.kategoria || 'Misdemeanor'}</div>
+                        <div class="charge-description">${charge.opis || 'Brak opisu'}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function filterWantedCharges() {
@@ -4166,21 +4226,7 @@ try {
             currentCitizenId = null;
             currentCitizenData = null;
         }
-        
-        function openNoteModal() {
-            if (!currentCitizenId) return;
-            document.getElementById('noteModal').classList.add('show');
-            const modal = document.getElementById('noteModal');
-            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
-            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
-            document.getElementById('notePriority').value = 'normal';
-        }
 
-        function closeWantedModal() {
-            document.getElementById('wantedModal').classList.remove('show');
-            document.getElementById('wantedForm').reset();
-        }
-        
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
@@ -4189,58 +4235,8 @@ try {
                 successDiv.classList.remove('show');
             }, 4000);
         }
-        
-        document.getElementById('noteForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('action', 'add_note');
-            formData.append('citizen_id', currentCitizenId);
-            formData.append('title', document.getElementById('noteTitle').value);
-            formData.append('content', document.getElementById('noteContent').value);
-            formData.append('officer', document.getElementById('noteOfficer').value);
-            formData.append('priority', document.getElementById('notePriority').value);
-            
-            fetch('', { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeNoteModal();
-                    showSuccess(data.message);
-                    setTimeout(() => showCitizenDetails(currentCitizenId), 500);
-                } else {
-                    alert('Błąd: ' + (data.message || 'Nieznany błąd'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Wystąpił błąd podczas dodawania notatki');
-            });
-        });
-        
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal-overlay')) {
-                if (e.target.id === 'citizenModal') closeModal();
-                if (e.target.id === 'verdictModal') closeVerdictModal();
-                if (e.target.id === 'detailModal') closeDetailModal();
-                if (e.target.id === 'noteModal') closeNoteModal();
-                if (e.target.id === 'wantedModal') closeWantedModal();
-                if (e.target.id === 'deleteModal') closeDeleteModal();
-            }
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (document.getElementById('verdictModal').classList.contains('show')) closeVerdictModal();
-                else if (document.getElementById('detailModal').classList.contains('show')) closeDetailModal();
-                else if (document.getElementById('deleteModal').classList.contains('show')) closeDeleteModal();
-                else if (document.getElementById('noteModal').classList.contains('show')) closeNoteModal();
-                else if (document.getElementById('wantedModal').classList.contains('show')) closeWantedModal();
-                else if (document.getElementById('citizenModal').classList.contains('show')) closeModal();
-            }
-        });
-        
-        console.log('Citizens management system v2.0 loaded successfully');
+
+        console.log('Citizens management system loaded successfully');
         console.log('User is admin:', userIsAdmin);
     </script>
 </body>
