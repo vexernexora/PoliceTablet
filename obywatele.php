@@ -718,42 +718,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
             exit;
-            try {
-                $citizen_id = intval($_POST['citizen_id']);
-                $reason = trim($_POST['reason']);
-                $details = trim($_POST['details']);
-                $officer = trim($_POST['officer']);
-                $priority = $_POST['priority'] ?? 'normal';
-                
-                $opis = "POSZUKIWANY: " . $reason;
-                if (!empty($details)) {
-                    $opis .= " - " . $details;
-                }
-                
-                if ($priority === 'high') {
-                    $opis = "[WYSOKI PRIORYTET] " . $opis;
-                } elseif ($priority === 'low') {
-                    $opis = "[NISKI PRIORYTET] " . $opis;
-                }
-                
-                $stmt = $pdo->prepare("
-                    INSERT INTO historia_aktywnosci (obywatel_id, typ, opis, funkcjonariusz) 
-                    VALUES (?, 'poszukiwanie', ?, ?)
-                ");
-                $stmt->execute([$citizen_id, $opis, $officer]);
-                
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Poszukiwanie zostało dodane',
-                    'id' => $pdo->lastInsertId()
-                ]);
-            } catch (Exception $e) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Błąd: ' . $e->getMessage()
-                ]);
-            }
-            exit;
 
         case 'delete_verdict':
             if (!$is_admin) {
@@ -3059,7 +3023,7 @@ try {
             const locationInput = document.getElementById('verdictLocation');
             const fineInput = document.getElementById('totalFineInput');
             const monthsInput = document.getElementById('sentenceMonthsInput');
-            
+
             if (locationInput) {
                 locationInput.addEventListener('input', updateSaveButton);
             }
@@ -3070,6 +3034,34 @@ try {
                 monthsInput.addEventListener('input', updateSaveButton);
             }
         }
+
+        // Export functions to global scope
+        window.closeVerdictModal = closeVerdictModal;
+        window.closeDetailModal = closeDetailModal;
+        window.closeNoteModal = closeNoteModal;
+        window.closeWantedModal = closeWantedModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.showVerdictDetails = showVerdictDetails;
+        window.showNoteDetails = showNoteDetails;
+        window.showWantedDetails = showWantedDetails;
+        window.openVerdictModal = openVerdictModal;
+        window.openNoteModal = openNoteModal;
+        window.openWantedModal = openWantedModal;
+        window.openDeleteModal = openDeleteModal;
+        window.confirmDelete = confirmDelete;
+        window.toggleCharge = toggleCharge;
+        window.changeQuantity = changeQuantity;
+        window.setQuantity = setQuantity;
+        window.removeCharge = removeCharge;
+        window.saveVerdict = saveVerdict;
+        window.toggleWantedCharge = toggleWantedCharge;
+        window.changeWantedQuantity = changeWantedQuantity;
+        window.setWantedQuantity = setWantedQuantity;
+        window.removeWantedCharge = removeWantedCharge;
+        window.saveWantedCharges = saveWantedCharges;
+        window.selectWarrant = selectWarrant;
+        window.openVehicleDetails = openVehicleDetails;
+        window.closeModal = closeModal;
 
         function setupWantedModal() {
             const searchInput = document.getElementById('wantedChargesSearch');
@@ -3088,12 +3080,39 @@ try {
             }
         }
 
+        function openVerdictModal() {
+            if (!currentCitizenId) return;
+
+            document.getElementById('verdictModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            loadCharges();
+            loadActiveWarrants();
+            selectedCharges = [];
+            updateSelectedItems();
+            document.getElementById('verdictLocation').value = '';
+            document.getElementById('totalFineInput').value = '';
+            document.getElementById('sentenceMonthsInput').value = '0';
+            document.getElementById('verdictNotes').value = '';
+            updateSaveButton();
+        }
+
+        function openNoteModal() {
+            if (!currentCitizenId) return;
+            document.getElementById('noteModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('noteModal');
+            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
+            document.getElementById('notePriority').value = 'normal';
+        }
+
         function openWantedModal() {
             if (!currentCitizenId) return;
-            
+
             document.getElementById('wantedModal').classList.add('show');
             document.body.style.overflow = 'hidden';
-            
+
             loadWantedCharges();
             selectedWantedCharges = [];
             updateSelectedWantedItems();
@@ -3106,6 +3125,36 @@ try {
             document.body.style.overflow = '';
             selectedWantedCharges = [];
             updateSelectedWantedItems();
+        }
+
+        function closeVerdictModal() {
+            document.getElementById('verdictModal').classList.remove('show');
+            document.body.style.overflow = '';
+            selectedCharges = [];
+            updateSelectedItems();
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('show');
+            document.body.style.overflow = '';
+            document.getElementById('noteForm').reset();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            currentDeleteItemId = null;
+            currentDeleteType = null;
+        }
+
+        function closeModal() {
+            document.getElementById('citizenModal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentCitizenId = null;
+            currentCitizenData = null;
         }
 
         function loadWantedCharges() {
@@ -3130,6 +3179,32 @@ try {
             .catch(error => {
                 console.error('Error loading wanted charges:', error);
                 document.getElementById('wantedChargesGrid').innerHTML = 
+                    '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
+            });
+        }
+
+        function loadCharges() {
+            fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=get_charges'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    availableCharges = data.charges;
+                    filteredCharges = [...availableCharges];
+                    renderCharges();
+                } else {
+                    document.getElementById('chargesGrid').innerHTML =
+                        '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading charges:', error);
+                document.getElementById('chargesGrid').innerHTML =
                     '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #dc2626; font-size: 18px;">Błąd ładowania zarzutów</div>';
             });
         }
@@ -4216,21 +4291,7 @@ try {
             modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
             document.getElementById('notePriority').value = 'normal';
         }
-        
-        function closeNoteModal() {
-            document.getElementById('noteModal').classList.remove('show');
-            document.getElementById('noteForm').reset();
-        }
-        
-        function openWantedModal() {
-            if (!currentCitizenId) return;
-            document.getElementById('wantedModal').classList.add('show');
-            const modal = document.getElementById('wantedModal');
-            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
-            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
-            document.getElementById('wantedPriority').value = 'normal';
-        }
-        
+
         function closeWantedModal() {
             document.getElementById('wantedModal').classList.remove('show');
             document.getElementById('wantedForm').reset();
