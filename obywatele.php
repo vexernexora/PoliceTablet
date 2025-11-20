@@ -2456,6 +2456,23 @@ try {
             }});
         }
         function closeModal(){document.getElementById('citizenModal').classList.remove('show');document.body.style.overflow='';}
+
+        // Stub functions - delegate to real implementations defined in main script below
+        // These are needed because HTML onclick attributes reference these before main script loads
+        function openVerdictModal(){if(window._openVerdictModal)window._openVerdictModal();}
+        function openNoteModal(){if(window._openNoteModal)window._openNoteModal();}
+        function openWantedModal(){if(window._openWantedModal)window._openWantedModal();}
+        function closeVerdictModal(){if(window._closeVerdictModal)window._closeVerdictModal();}
+        function closeNoteModal(){if(window._closeNoteModal)window._closeNoteModal();}
+        function closeWantedModal(){if(window._closeWantedModal)window._closeWantedModal();}
+        function closeDetailModal(){if(window._closeDetailModal)window._closeDetailModal();}
+        function closeDeleteModal(){if(window._closeDeleteModal)window._closeDeleteModal();}
+        function showVerdictDetails(id){if(window._showVerdictDetails)window._showVerdictDetails(id);}
+        function showNoteDetails(t,c,d,o){if(window._showNoteDetails)window._showNoteDetails(t,c,d,o);}
+        function showWantedDetails(r,d,dt,o){if(window._showWantedDetails)window._showWantedDetails(r,d,dt,o);}
+        function saveVerdict(){if(window._saveVerdict)window._saveVerdict();}
+        function saveWantedCharges(){if(window._saveWantedCharges)window._saveWantedCharges();}
+        function confirmDelete(){if(window._confirmDelete)window._confirmDelete();}
     </script>
 </head>
 <body>
@@ -3034,14 +3051,14 @@ try {
         // Expose to global scope
         window.showCitizenDetails = showCitizenDetails;
         window.closeModal = closeModal;
-        window.openVerdictModal = openVerdictModal;
-        window.closeVerdictModal = closeVerdictModal;
-        window.openNoteModal = openNoteModal;
-        window.closeNoteModal = closeNoteModal;
-        window.openWantedModal = openWantedModal;
-        window.closeWantedModal = closeWantedModal;
-        window.closeDetailModal = closeDetailModal;
-        window.closeDeleteModal = closeDeleteModal;
+        window._openVerdictModal = openVerdictModal;
+        window._closeVerdictModal = closeVerdictModal;
+        window._openNoteModal = openNoteModal;
+        window._closeNoteModal = closeNoteModal;
+        window._openWantedModal = openWantedModal;
+        window._closeWantedModal = closeWantedModal;
+        window._closeDetailModal = closeDetailModal;
+        window._closeDeleteModal = closeDeleteModal;
         window.toggleCharge = toggleCharge;
         window.toggleWantedCharge = toggleWantedCharge;
         window.changeQuantity = changeQuantity;
@@ -3051,13 +3068,13 @@ try {
         window.setWantedQuantity = setWantedQuantity;
         window.removeWantedCharge = removeWantedCharge;
         window.selectWarrant = selectWarrant;
-        window.saveVerdict = saveVerdict;
-        window.saveWantedCharges = saveWantedCharges;
-        window.confirmDelete = confirmDelete;
+        window._saveVerdict = saveVerdict;
+        window._saveWantedCharges = saveWantedCharges;
+        window._confirmDelete = confirmDelete;
         window.openDeleteModal = openDeleteModal;
-        window.showVerdictDetails = showVerdictDetails;
-        window.showNoteDetails = showNoteDetails;
-        window.showWantedDetails = showWantedDetails;
+        window._showVerdictDetails = showVerdictDetails;
+        window._showNoteDetails = showNoteDetails;
+        window._showWantedDetails = showWantedDetails;
         window.openVehicleDetails = openVehicleDetails;
 
         document.addEventListener('DOMContentLoaded', function() {
