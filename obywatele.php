@@ -2456,12 +2456,6 @@ try {
             }});
         }
         function closeModal(){document.getElementById('citizenModal').classList.remove('show');document.body.style.overflow='';}
-
-       function openVerdictModal(){document.getElementById('verdictModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('chargesGrid').innerHTML=html;}});}
-        function openNoteModal(){document.getElementById('noteModal').classList.add('show');document.body.style.overflow='hidden';}
-        function openWantedModal(){document.getElementById('wantedModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('wantedChargesGrid').innerHTML=html;}});}
-        function showNoteDetails(title,content,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły notatki';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Tytuł</div><div class="detail-value">${title}</div></div><div class="detail-item"><div class="detail-label">Data</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${content?`<div class="detail-section"><h4>Treść</h4><div class="detail-item"><div class="detail-value">${content}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
-        function showWantedDetails(reason,details,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły poszukiwania';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Powód poszukiwania</div><div class="detail-value">${reason}</div></div><div class="detail-item"><div class="detail-label">Data dodania</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${details?`<div class="detail-section"><h4>Szczegóły</h4><div class="detail-item"><div class="detail-value">${details}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
         function closeDetailModal(){document.getElementById('detailModal').classList.remove('show');}
         function closeVerdictModal(){document.getElementById('verdictModal').classList.remove('show');document.body.style.overflow='';}
         function closeNoteModal(){document.getElementById('noteModal').classList.remove('show');document.body.style.overflow='';}
@@ -3041,33 +3035,14 @@ try {
             });
         }
         
-        // Expose to global scope
+        // Expose to global scope - basic functions defined in <head>
         window.showCitizenDetails = showCitizenDetails;
         window.closeModal = closeModal;
-        window.openVerdictModal = openVerdictModal;
         window.closeVerdictModal = closeVerdictModal;
-        window.openNoteModal = openNoteModal;
         window.closeNoteModal = closeNoteModal;
-        window.openWantedModal = openWantedModal;
         window.closeWantedModal = closeWantedModal;
         window.closeDetailModal = closeDetailModal;
-        window.closeDeleteModal = closeDeleteModal;
-        window.toggleCharge = toggleCharge;
-        window.toggleWantedCharge = toggleWantedCharge;
-        window.changeQuantity = changeQuantity;
-        window.setQuantity = setQuantity;
-        window.removeCharge = removeCharge;
-        window.changeWantedQuantity = changeWantedQuantity;
-        window.setWantedQuantity = setWantedQuantity;
-        window.removeWantedCharge = removeWantedCharge;
-        window.selectWarrant = selectWarrant;
-        window.saveVerdict = saveVerdict;
-        window.saveWantedCharges = saveWantedCharges;
-        window.confirmDelete = confirmDelete;
-        window.openDeleteModal = openDeleteModal;
-        window.showNoteDetails = showNoteDetails;
-        window.showWantedDetails = showWantedDetails;
-        window.openVehicleDetails = openVehicleDetails;
+        // Other window assignments are after their function definitions below
 
         document.addEventListener('DOMContentLoaded', function() {
             setupPrioritySelectors();
@@ -4322,7 +4297,29 @@ try {
                 else if (document.getElementById('citizenModal').classList.contains('show')) closeModal();
             }
         });
-        
+
+        // Expose modal and action functions to global scope
+        window.openVerdictModal = openVerdictModal;
+        window.openNoteModal = openNoteModal;
+        window.openWantedModal = openWantedModal;
+        window.toggleCharge = toggleCharge;
+        window.toggleWantedCharge = toggleWantedCharge;
+        window.changeQuantity = changeQuantity;
+        window.setQuantity = setQuantity;
+        window.removeCharge = removeCharge;
+        window.changeWantedQuantity = changeWantedQuantity;
+        window.setWantedQuantity = setWantedQuantity;
+        window.removeWantedCharge = removeWantedCharge;
+        window.selectWarrant = selectWarrant;
+        window.saveVerdict = saveVerdict;
+        window.saveWantedCharges = saveWantedCharges;
+        window.confirmDelete = confirmDelete;
+        window.openDeleteModal = openDeleteModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.showNoteDetails = showNoteDetails;
+        window.showWantedDetails = showWantedDetails;
+        window.openVehicleDetails = openVehicleDetails;
+
         console.log('Citizens management system v2.0 loaded successfully');
         console.log('User is admin:', userIsAdmin);
     </script>
