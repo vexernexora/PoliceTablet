@@ -3537,13 +3537,6 @@ try {
             }
         }
 
-        function closeVerdictModal() {
-            document.getElementById('verdictModal').classList.remove('show');
-            document.body.style.overflow = '';
-            selectedCharges = [];
-            updateSelectedItems();
-        }
-
         function toggleCharge(chargeId) {
             const charge = availableCharges.find(c => c.id == chargeId);
             if (!charge) return;
@@ -4158,23 +4151,13 @@ try {
             document.getElementById('detailModal').classList.add('show');
         }
 
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.remove('show');
-        }
-
         function openDeleteModal(itemId, type) {
             currentDeleteItemId = itemId;
             currentDeleteType = type;
             document.getElementById('deleteModal').classList.add('show');
             document.getElementById('deleteReason').value = '';
         }
-        
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('show');
-            currentDeleteItemId = null;
-            currentDeleteType = null;
-        }
-        
+
         function confirmDelete() {
             const reason = document.getElementById('deleteReason').value.trim();
             
@@ -4218,13 +4201,6 @@ try {
                 console.error('Error:', error);
                 alert('Wystąpił błąd podczas usuwania wpisu');
             });
-        }
-        
-        function closeModal() {
-            document.getElementById('citizenModal').classList.remove('show');
-            document.body.style.overflow = '';
-            currentCitizenId = null;
-            currentCitizenData = null;
         }
 
         function showSuccess(message) {
