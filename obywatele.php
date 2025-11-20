@@ -2456,6 +2456,17 @@ try {
             }});
         }
         function closeModal(){document.getElementById('citizenModal').classList.remove('show');document.body.style.overflow='';}
+
+       function openVerdictModal(){document.getElementById('verdictModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('chargesGrid').innerHTML=html;}});}
+        function openNoteModal(){document.getElementById('noteModal').classList.add('show');document.body.style.overflow='hidden';}
+        function openWantedModal(){document.getElementById('wantedModal').classList.add('show');document.body.style.overflow='hidden';fetch('',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=get_charges'}).then(r=>r.json()).then(d=>{if(d.success){let html='';d.charges.forEach(c=>{const isFineOnly=parseInt(c.miesiace_odsiadki)===0;const monthsText=isFineOnly?'Mandat':c.miesiace_odsiadki+' mies.';html+=`<div class="charge-card ${isFineOnly?'fine-only':''}" style="cursor:pointer;"><div class="charge-code">${c.code}</div><div class="charge-name">${c.nazwa}</div><div class="charge-details"><div class="charge-amount">$${parseFloat(c.kara_pieniezna).toFixed(2)}</div><div class="charge-months ${isFineOnly?'fine-only':''}">${monthsText}</div></div><div class="charge-category">${c.kategoria||'Misdemeanor'}</div><div class="charge-description">${c.opis||'Brak opisu'}</div></div>`;});document.getElementById('wantedChargesGrid').innerHTML=html;}});}
+        function showVerdictDetails(id){document.getElementById('detailModalTitle').textContent='Szczegóły wyroku #'+id;document.getElementById('detailModalContent').innerHTML='<div class="loading">Ładowanie szczegółów...</div>';document.getElementById('detailModal').classList.add('show');}
+        function showNoteDetails(title,content,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły notatki';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Tytuł</div><div class="detail-value">${title}</div></div><div class="detail-item"><div class="detail-label">Data</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${content?`<div class="detail-section"><h4>Treść</h4><div class="detail-item"><div class="detail-value">${content}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
+        function showWantedDetails(reason,details,date,officer){document.getElementById('detailModalTitle').textContent='Szczegóły poszukiwania';document.getElementById('detailModalContent').innerHTML=`<div class="detail-section"><h4>Informacje</h4><div class="detail-grid"><div class="detail-item"><div class="detail-label">Powód poszukiwania</div><div class="detail-value">${reason}</div></div><div class="detail-item"><div class="detail-label">Data dodania</div><div class="detail-value">${date}</div></div><div class="detail-item"><div class="detail-label">Funkcjonariusz</div><div class="detail-value">${officer}</div></div></div></div>${details?`<div class="detail-section"><h4>Szczegóły</h4><div class="detail-item"><div class="detail-value">${details}</div></div></div>`:''}`;document.getElementById('detailModal').classList.add('show');}
+        function closeDetailModal(){document.getElementById('detailModal').classList.remove('show');}
+        function closeVerdictModal(){document.getElementById('verdictModal').classList.remove('show');document.body.style.overflow='';}
+        function closeNoteModal(){document.getElementById('noteModal').classList.remove('show');document.body.style.overflow='';}
+        function closeWantedModal(){document.getElementById('wantedModal').classList.remove('show');document.body.style.overflow='';}
     </script>
 </head>
 <body>
@@ -4222,6 +4233,34 @@ try {
             document.body.style.overflow = '';
             currentCitizenId = null;
             currentCitizenData = null;
+        }
+        
+        function openNoteModal() {
+            if (!currentCitizenId) return;
+            document.getElementById('noteModal').classList.add('show');
+            const modal = document.getElementById('noteModal');
+            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
+            document.getElementById('notePriority').value = 'normal';
+        }
+        
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('show');
+            document.getElementById('noteForm').reset();
+        }
+        
+        function openWantedModal() {
+            if (!currentCitizenId) return;
+            document.getElementById('wantedModal').classList.add('show');
+            const modal = document.getElementById('wantedModal');
+            modal.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            modal.querySelector('.priority-option[data-priority="normal"]').classList.add('selected');
+            document.getElementById('wantedPriority').value = 'normal';
+        }
+        
+        function closeWantedModal() {
+            document.getElementById('wantedModal').classList.remove('show');
+            document.getElementById('wantedForm').reset();
         }
         
         function showSuccess(message) {
