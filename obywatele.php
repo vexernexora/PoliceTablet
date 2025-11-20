@@ -2460,6 +2460,14 @@ try {
         function closeVerdictModal(){document.getElementById('verdictModal').classList.remove('show');document.body.style.overflow='';}
         function closeNoteModal(){document.getElementById('noteModal').classList.remove('show');document.body.style.overflow='';}
         function closeWantedModal(){document.getElementById('wantedModal').classList.remove('show');document.body.style.overflow='';}
+
+        // Forward declarations - will be redefined with full implementations below
+        function openVerdictModal(){}
+        function openNoteModal(){}
+        function openWantedModal(){}
+        function showVerdictDetails(){}
+        function showNoteDetails(){}
+        function showWantedDetails(){}
     </script>
 </head>
 <body>
