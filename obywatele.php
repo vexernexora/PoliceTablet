@@ -3044,6 +3044,32 @@ try {
         
         // Expose to global scope
         window.showCitizenDetails = showCitizenDetails;
+        window.closeModal = closeModal;
+        window.openVerdictModal = openVerdictModal;
+        window.closeVerdictModal = closeVerdictModal;
+        window.openNoteModal = openNoteModal;
+        window.closeNoteModal = closeNoteModal;
+        window.openWantedModal = openWantedModal;
+        window.closeWantedModal = closeWantedModal;
+        window.closeDetailModal = closeDetailModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.toggleCharge = toggleCharge;
+        window.toggleWantedCharge = toggleWantedCharge;
+        window.changeQuantity = changeQuantity;
+        window.setQuantity = setQuantity;
+        window.removeCharge = removeCharge;
+        window.changeWantedQuantity = changeWantedQuantity;
+        window.setWantedQuantity = setWantedQuantity;
+        window.removeWantedCharge = removeWantedCharge;
+        window.selectWarrant = selectWarrant;
+        window.saveVerdict = saveVerdict;
+        window.saveWantedCharges = saveWantedCharges;
+        window.confirmDelete = confirmDelete;
+        window.openDeleteModal = openDeleteModal;
+        window.showVerdictDetails = showVerdictDetails;
+        window.showNoteDetails = showNoteDetails;
+        window.showWantedDetails = showWantedDetails;
+        window.openVehicleDetails = openVehicleDetails;
 
         document.addEventListener('DOMContentLoaded', function() {
             setupPrioritySelectors();
