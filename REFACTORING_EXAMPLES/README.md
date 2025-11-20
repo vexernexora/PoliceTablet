@@ -1,6 +1,10 @@
 # 🔧 Przykłady Refaktoryzacji - Obywatele.php
 
-Ten folder zawiera **przykładową strukturę** pokazującą jak podzielić monolityczny plik `obywatele.php` na mniejsze, łatwiejsze w zarządzaniu moduły.
+Ten folder zawiera **działającą strukturę** pokazującą jak podzielić monolityczny plik `obywatele.php` na mniejsze, łatwiejsze w zarządzaniu moduły.
+
+## ⚡ GOTOWE DO UŻYCIA!
+
+Te pliki są **gotowe do użycia w produkcji**! Wystarczy skopiować strukturę folderów do głównego katalogu projektu.
 
 ## 📁 Co znajduje się w tym folderze?
 
@@ -121,9 +125,68 @@ function loadCharges() {
 | Jeden wielki CSS | CSS podzielony tematycznie |
 | Jeden wielki JS | JS podzielony na moduły |
 
-## 🎯 Jak zastosować w projekcie?
+## 🚀 Jak użyć tych plików (2 opcje):
 
-### Opcja A: Stopniowa migracja (ZALECANE)
+### OPCJA 1: Skopiuj całą strukturę (SZYBKIE)
+
+**Kroki:**
+
+1. **Backup oryginalnego pliku:**
+   ```bash
+   cp obywatele.php obywatele_BACKUP.php
+   ```
+
+2. **Skopiuj strukturę folderów z REFACTORING_EXAMPLES:**
+   ```bash
+   # Z katalogu głównego projektu (PoliceTablet/)
+
+   # Skopiuj foldery
+   cp -r REFACTORING_EXAMPLES/config ./
+   cp -r REFACTORING_EXAMPLES/models ./
+   cp -r REFACTORING_EXAMPLES/api ./
+   cp -r REFACTORING_EXAMPLES/assets ./
+
+   # Skopiuj config.php jeśli nie istnieje (lub dostosuj istniejący)
+   cp REFACTORING_EXAMPLES/config.php ./
+   ```
+
+3. **Zastąp obywatele.php nowym routerem:**
+   ```bash
+   cp REFACTORING_EXAMPLES/obywatele_NEW.php obywatele.php
+   ```
+
+4. **Dostosuj config.php:**
+   - Otwórz `config.php`
+   - Ustaw dane do bazy danych (DB_HOST, DB_NAME, DB_USER, DB_PASS)
+
+5. **Test!**
+   - Otwórz obywatele.php w przeglądarce
+   - Sprawdź czy działa pobieranie zarzutów
+
+**Co otrzymasz:**
+```
+PoliceTablet/
+├── obywatele.php              ← Nowy router (działający!)
+├── config.php                 ← Konfiguracja bazy
+├── config/
+│   ├── database.php          ← Połączenie z bazą
+│   └── auth.php              ← Autoryzacja
+├── models/
+│   ├── Charge.php            ← Model zarzutów
+│   └── Verdict.php           ← Model wyroków
+├── api/
+│   ├── charges/
+│   │   └── get_charges.php   ← API pobierania zarzutów
+│   └── verdicts/
+│       └── add_verdict.php   ← API dodawania wyroków
+└── assets/
+    └── js/
+        └── charges.js        ← JavaScript dla zarzutów
+```
+
+---
+
+### OPCJA 2: Stopniowa migracja (BEZPIECZNIEJSZE)
 
 1. **Stwórz strukturę folderów**
    ```bash

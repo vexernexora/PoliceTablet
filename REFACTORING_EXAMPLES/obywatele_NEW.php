@@ -5,8 +5,8 @@
  */
 
 // Ładowanie konfiguracji
-require_once 'REFACTORING_EXAMPLES/config/database.php';
-require_once 'REFACTORING_EXAMPLES/config/auth.php';
+require_once 'config/database.php';
+require_once 'config/auth.php';
 
 // Weryfikacja autoryzacji
 requireAuth();
@@ -16,9 +16,6 @@ $pdo = getDB();
 if (!$pdo) {
     die("Błąd połączenia z bazą danych");
 }
-
-// Inicjalizacja tabel (tylko raz - można przenieść do osobnego pliku init_tables.php)
-require_once 'config/init_tables.php';
 
 // Pobieranie danych użytkownika
 $current_user = getCurrentUser($pdo);
@@ -32,24 +29,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Routing do odpowiedniego API handlera
     $routes = [
         // Citizens
-        'get_citizen' => 'REFACTORING_EXAMPLES/api/citizens/get_citizen.php',
+        'get_citizen' => 'api/citizens/get_citizen.php',
 
         // Charges
-        'get_charges' => 'REFACTORING_EXAMPLES/api/charges/get_charges.php',
+        'get_charges' => 'api/charges/get_charges.php',
 
         // Verdicts
-        'add_verdict' => 'REFACTORING_EXAMPLES/api/verdicts/add_verdict.php',
-        'get_verdict_details' => 'REFACTORING_EXAMPLES/api/verdicts/get_verdict_details.php',
-        'delete_verdict' => 'REFACTORING_EXAMPLES/api/verdicts/delete_verdict.php',
+        'add_verdict' => 'api/verdicts/add_verdict.php',
+        'get_verdict_details' => 'api/verdicts/get_verdict_details.php',
+        'delete_verdict' => 'api/verdicts/delete_verdict.php',
 
         // Wanted
-        'add_wanted_charges' => 'REFACTORING_EXAMPLES/api/wanted/add_wanted.php',
-        'get_active_warrants' => 'REFACTORING_EXAMPLES/api/wanted/get_active_warrants.php',
-        'delete_wanted' => 'REFACTORING_EXAMPLES/api/wanted/delete_wanted.php',
+        'add_wanted_charges' => 'api/wanted/add_wanted.php',
+        'get_active_warrants' => 'api/wanted/get_active_warrants.php',
+        'delete_wanted' => 'api/wanted/delete_wanted.php',
 
         // Notes
-        'add_note' => 'REFACTORING_EXAMPLES/api/notes/add_note.php',
-        'delete_note' => 'REFACTORING_EXAMPLES/api/notes/delete_note.php'
+        'add_note' => 'api/notes/add_note.php',
+        'delete_note' => 'api/notes/delete_note.php'
     ];
 
     if (isset($routes[$action]) && file_exists($routes[$action])) {
@@ -92,12 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <?php include 'views/modals/delete_modal.php'; ?>
 
     <!-- JavaScript -->
-    <script src="REFACTORING_EXAMPLES/assets/js/main.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/citizens.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/verdicts.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/wanted.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/notes.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/charges.js"></script>
-    <script src="REFACTORING_EXAMPLES/assets/js/modals.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/citizens.js"></script>
+    <script src="assets/js/verdicts.js"></script>
+    <script src="assets/js/wanted.js"></script>
+    <script src="assets/js/notes.js"></script>
+    <script src="assets/js/charges.js"></script>
+    <script src="assets/js/modals.js"></script>
 </body>
 </html>
