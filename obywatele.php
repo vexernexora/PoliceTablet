@@ -260,55 +260,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $citizen['poszukiwania_count'] = $warrant_count['count'];
                 }
 
-                // Dodaj sumy z aktywnych poszukiwań
-                if ($citizen) {
-                    $warrant_stmt = $pdo->prepare("
-                        SELECT zarzuty_json
-                        FROM poszukiwane_zarzuty
-                        WHERE obywatel_id = ? AND status = 'aktywne'
-                    ");
-                    $warrant_stmt->execute([$id]);
-                    $active_warrants = $warrant_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                    error_log("DEBUG get_citizen: Found " . count($active_warrants) . " active warrants for citizen $id");
-
-                    $warrant_total_fine = 0;
-                    $warrant_total_months = 0;
-
-                    foreach ($active_warrants as $warrant) {
-                        $charges = json_decode($warrant['zarzuty_json'], true);
-                        error_log("DEBUG get_citizen: Warrant charges JSON: " . $warrant['zarzuty_json']);
-
-                        if (is_array($charges)) {
-                            foreach ($charges as $charge_data) {
-                                $charge_id = $charge_data['id'];
-                                $quantity = $charge_data['quantity'];
-
-                                $charge_stmt = $pdo->prepare("SELECT kara_pieniezna, miesiace_odsiadki FROM wyroki2 WHERE id = ?");
-                                $charge_stmt->execute([$charge_id]);
-                                $charge = $charge_stmt->fetch(PDO::FETCH_ASSOC);
-
-                                if ($charge) {
-                                    $fine_added = floatval($charge['kara_pieniezna']) * $quantity;
-                                    $months_added = intval($charge['miesiace_odsiadki']) * $quantity;
-
-                                    $warrant_total_fine += $fine_added;
-                                    $warrant_total_months += $months_added;
-
-                                    error_log("DEBUG get_citizen: Charge $charge_id x$quantity: +$$fine_added, +$months_added months");
-                                }
-                            }
-                        }
-                    }
-
-                    error_log("DEBUG get_citizen: Warrant totals - Fine: $$warrant_total_fine, Months: $warrant_total_months");
-                    error_log("DEBUG get_citizen: Before adding - suma_kar: " . $citizen['suma_kar'] . ", laczne_miesiace: " . $citizen['laczne_miesiace']);
-
-                    $citizen['suma_kar'] = floatval($citizen['suma_kar']) + $warrant_total_fine;
-                    $citizen['laczne_miesiace'] = intval($citizen['laczne_miesiace']) + $warrant_total_months;
-
-                    error_log("DEBUG get_citizen: After adding - suma_kar: " . $citizen['suma_kar'] . ", laczne_miesiace: " . $citizen['laczne_miesiace']);
-                }
+                // UWAGA: Poszukiwania NIE dodają się do sum kar/miesięcy
+                // Zarzuty z poszukiwania są automatycznie dodawane przy wystawianiu wyroku
                 
                 if ($citizen) {
                     // Pobierz wyroki
@@ -2790,7 +2743,6 @@ try {
             <div class="verdict-modal-header" id="verdictModalHeader">
                 <h3 class="verdict-modal-title">Dodawanie wyroku/mandatu</h3>
                 <p class="verdict-modal-subtitle">Wybierz zarzuty z listy kodów VC (0 miesięcy = mandat)</p>
-                <div id="activeWarrantsInfo" style="margin-top: 12px;"></div>
             </div>
             
             <div class="verdict-modal-body">
