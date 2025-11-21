@@ -124,9 +124,31 @@ try {
                 data_rozwiazania TIMESTAMP NULL,
                 wyrok_id INT NULL,
                 FOREIGN KEY (obywatel_id) REFERENCES obywatele(id),
-                FOREIGN KEY (wyrok_id) REFERENCES wyroki(id)
+                FOREIGN KEY (wyrok_id) REFERENCES wyroki(id) ON DELETE SET NULL
             )
         ");
+    } else {
+        // Migracja: Naprawa FK constraint dla wyrok_id
+        try {
+            // Sprawdź czy FK constraint istnieje i ma poprawną konfigurację
+            $stmt = $pdo->query("
+                SELECT CONSTRAINT_NAME, DELETE_RULE
+                FROM information_schema.REFERENTIAL_CONSTRAINTS
+                WHERE CONSTRAINT_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'poszukiwane_zarzuty'
+                AND REFERENCED_TABLE_NAME = 'wyroki'
+            ");
+            $fk = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($fk && $fk['DELETE_RULE'] !== 'SET NULL') {
+                // Usuń stary FK constraint
+                $pdo->exec("ALTER TABLE poszukiwane_zarzuty DROP FOREIGN KEY " . $fk['CONSTRAINT_NAME']);
+                // Dodaj nowy z ON DELETE SET NULL
+                $pdo->exec("ALTER TABLE poszukiwane_zarzuty ADD FOREIGN KEY (wyrok_id) REFERENCES wyroki(id) ON DELETE SET NULL");
+            }
+        } catch (Exception $e) {
+            error_log("FK migration warning: " . $e->getMessage());
+        }
     }
     
     // Sprawdź i utwórz tabelę wyroków
@@ -374,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'get_verdict_details':
             try {
                 $verdict_id = intval($_POST['verdict_id']);
-                
+
                 $stmt = $pdo->prepare("
                     SELECT w.*, DATE_FORMAT(w.data_wyroku, '%d.%m.%Y %H:%i') as formatted_date
                     FROM wyroki w
@@ -382,19 +404,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$verdict_id]);
                 $verdict = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 if ($verdict) {
                     $zarzuty_data = json_decode($verdict['zarzuty_json'], true);
                     $verdict['zarzuty_details'] = [];
 
                     $verdict['laczna_kara_formatted'] = number_format((float)$verdict['laczna_kara'], 2, '.', ' ') . ' USD';
                     $verdict['waluta'] = 'USD';
-                    
+
+                    // Pobierz informacje o poszukiwaniu jeśli wyrok był z nim związany
+                    $verdict['warrant_info'] = null;
+                    if ($verdict['poszukiwanie_id']) {
+                        $stmt = $pdo->prepare("
+                            SELECT pz.*, DATE_FORMAT(pz.data_utworzenia, '%d.%m.%Y %H:%i') as formatted_date
+                            FROM poszukiwane_zarzuty pz
+                            WHERE pz.id = ?
+                        ");
+                        $stmt->execute([$verdict['poszukiwanie_id']]);
+                        $warrant = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                        if ($warrant) {
+                            $warrant_charges = json_decode($warrant['zarzuty_json'], true);
+                            $charge_names = [];
+                            foreach ($warrant_charges as $wc) {
+                                $stmt = $pdo->prepare("SELECT code, nazwa FROM wyroki2 WHERE id = ?");
+                                $stmt->execute([$wc['id']]);
+                                $ch = $stmt->fetch(PDO::FETCH_ASSOC);
+                                if ($ch) {
+                                    $charge_names[] = $ch['code'] . ' - ' . $ch['nazwa'] . ($wc['quantity'] > 1 ? " (x{$wc['quantity']})" : '');
+                                }
+                            }
+                            $verdict['warrant_info'] = [
+                                'id' => $warrant['id'],
+                                'data' => $warrant['formatted_date'],
+                                'zarzuty' => implode(', ', $charge_names),
+                                'funkcjonariusz' => $warrant['funkcjonariusz']
+                            ];
+                        }
+                    }
+
                     foreach ($zarzuty_data as $zarzut_item) {
                         $stmt = $pdo->prepare("SELECT * FROM wyroki2 WHERE id = ?");
                         $stmt->execute([$zarzut_item['id']]);
                         $zarzut = $stmt->fetch(PDO::FETCH_ASSOC);
-                        
+
                         if ($zarzut) {
                             $verdict['zarzuty_details'][] = [
                                 'kod' => $zarzut['code'],
@@ -410,7 +463,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 }
-                
+
                 echo json_encode([
                     'success' => true,
                     'verdict' => $verdict
