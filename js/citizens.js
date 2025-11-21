@@ -1149,23 +1149,35 @@
         // Zaproponuj dodanie zarzutów z poszukiwania do wyroku
         if (warrantId && activeWarrants.length > 0) {
             const warrant = activeWarrants.find(w => w.id == warrantId);
+
+            console.log('selectWarrant - warrant:', warrant);
+            console.log('availableCharges length:', availableCharges.length);
+
             if (warrant && warrant.zarzuty_details && warrant.zarzuty_details.length > 0) {
                 const confirmAdd = confirm('Czy chcesz automatycznie dodać zarzuty z tego poszukiwania do wyroku?');
                 if (confirmAdd) {
+                    let addedCount = 0;
+
                     // Dodaj zarzuty z poszukiwania do listy wybranych zarzutów
                     warrant.zarzuty_details.forEach(warrantCharge => {
                         const chargeId = warrantCharge.id;
                         const quantity = warrantCharge.ilosc || 1;
 
-                        // Sprawdź czy zarzut już istnieje
+                        console.log('Trying to add charge:', chargeId, 'quantity:', quantity);
+
+                        // Sprawdź czy zarzut już istnieje w selectedCharges
                         const existingIndex = selectedCharges.findIndex(c => c.id == chargeId);
 
                         if (existingIndex >= 0) {
                             // Zwiększ ilość
                             selectedCharges[existingIndex].quantity += quantity;
+                            addedCount++;
+                            console.log('Increased quantity for existing charge');
                         } else {
-                            // Dodaj nowy zarzut
+                            // Dodaj nowy zarzut - szukaj w availableCharges
                             const charge = availableCharges.find(c => c.id == chargeId);
+                            console.log('Found charge in availableCharges:', charge);
+
                             if (charge) {
                                 selectedCharges.push({
                                     id: charge.id,
@@ -1175,14 +1187,27 @@
                                     miesiace_odsiadki: parseInt(charge.miesiace_odsiadki),
                                     quantity: quantity
                                 });
+                                addedCount++;
+                                console.log('Added new charge to selectedCharges');
+                            } else {
+                                console.error('Charge not found in availableCharges! ID:', chargeId);
                             }
                         }
                     });
+
+                    console.log('Total charges added:', addedCount);
+                    console.log('selectedCharges:', selectedCharges);
 
                     updateSelectedItems();
                     updateTotals();
                     updateSaveButton();
                     updateChargeStates();
+
+                    if (addedCount > 0) {
+                        alert(`Dodano ${addedCount} zarzutów z poszukiwania!`);
+                    } else {
+                        alert('Nie udało się dodać zarzutów. Sprawdź konsolę (F12) dla szczegółów.');
+                    }
                 }
             }
         }
