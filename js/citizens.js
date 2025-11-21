@@ -212,13 +212,15 @@
             const date = new Date(verdict.formatted_date).toLocaleString('pl-PL');
             const canDelete = userIsAdmin;
             const isFineOnly = parseInt(verdict.wyrok_miesiace) === 0;
+            const hasWarrant = verdict.poszukiwanie_id && parseInt(verdict.poszukiwanie_id) > 0;
             const verdictClass = `activity-item verdict-item ${isFineOnly ? 'fine-only' : ''}`;
             const verdictType = isFineOnly ? 'Mandat' : 'Wyrok';
+            const warrantBadge = hasWarrant ? `<span style="display: inline-block; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #78350f; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px;">🔍 Z POSZUKIWANIEM #${verdict.poszukiwanie_id}</span>` : '';
 
             return `
                 <div class="${verdictClass}" data-verdict-id="${verdict.id}">
                     <div class="activity-header">
-                        <div class="activity-title">${verdictType} #${verdict.id}</div>
+                        <div class="activity-title">${verdictType} #${verdict.id}${warrantBadge}</div>
                         <div class="activity-date">${date}</div>
                         ${canDelete ? `<button class="delete-btn" data-delete-id="${verdict.id}" data-delete-type="verdict" title="Usuń ${verdictType.toLowerCase()}">Usuń</button>` : ''}
                     </div>
@@ -326,6 +328,30 @@
                             </div>
                         </div>
                     </div>
+
+                    ${verdict.warrant_info ? `
+                    <div class="detail-section" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="color: #92400e; margin-bottom: 12px;">🔍 Wyrok związany z poszukiwaniem</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label" style="color: #92400e;">ID Poszukiwania</div>
+                                <div class="detail-value" style="color: #92400e; font-weight: 600;">#${verdict.warrant_info.id}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label" style="color: #92400e;">Data utworzenia</div>
+                                <div class="detail-value" style="color: #92400e;">${verdict.warrant_info.data}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label" style="color: #92400e;">Funkcjonariusz poszukiwania</div>
+                                <div class="detail-value" style="color: #92400e;">${escapeHtml(verdict.warrant_info.funkcjonariusz)}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f59e0b;">
+                            <div class="detail-label" style="color: #92400e;">Zarzuty z poszukiwania</div>
+                            <div class="detail-value" style="color: #92400e; font-weight: 500; margin-top: 4px;">${escapeHtml(verdict.warrant_info.zarzuty)}</div>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div class="detail-section">
                         <h4>Zarzuty</h4>
