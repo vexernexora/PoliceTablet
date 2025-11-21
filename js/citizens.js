@@ -105,6 +105,9 @@
     }
 
     function updateCitizenModal(citizen) {
+        console.log('updateCitizenModal - citizen data:', citizen);
+        console.log('suma_kar:', citizen.suma_kar, 'laczne_miesiace:', citizen.laczne_miesiace);
+
         document.getElementById('modalCitizenName').textContent = `${citizen.imie} ${citizen.nazwisko}`;
         document.getElementById('modalCitizenPesel').textContent = `PESEL: ${citizen.pesel}`;
         document.getElementById('modalCitizenAddress').textContent = citizen.adres || 'Brak adresu';
