@@ -967,6 +967,14 @@
         const warrantSelect = document.getElementById('warrantSelect');
         const warrantId = warrantSelect ? warrantSelect.value : '';
 
+        // Potwierdzenie usunięcia poszukiwania
+        if (warrantId) {
+            const confirmMessage = 'Wystawiając wyrok z poszukiwaniem, poszukiwanie zostanie automatycznie usunięte i zamknięte. Kontynuować?';
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+        }
+
         const formData = new FormData();
         formData.append('action', 'add_verdict');
         formData.append('citizen_id', currentCitizenId);
@@ -1108,6 +1116,47 @@
         const selectedWarrant = document.querySelector(`#activeWarrants .activity-item[data-warrant-id="${warrantId}"]`);
         if (selectedWarrant) {
             selectedWarrant.style.background = 'linear-gradient(135deg, #fde68a 0%, #fcd34d 100%)';
+        }
+
+        // Zaproponuj dodanie zarzutów z poszukiwania do wyroku
+        if (warrantId && activeWarrants.length > 0) {
+            const warrant = activeWarrants.find(w => w.id == warrantId);
+            if (warrant && warrant.zarzuty_details && warrant.zarzuty_details.length > 0) {
+                const confirmAdd = confirm('Czy chcesz automatycznie dodać zarzuty z tego poszukiwania do wyroku?');
+                if (confirmAdd) {
+                    // Dodaj zarzuty z poszukiwania do listy wybranych zarzutów
+                    warrant.zarzuty_details.forEach(warrantCharge => {
+                        const chargeId = warrantCharge.id;
+                        const quantity = warrantCharge.ilosc || 1;
+
+                        // Sprawdź czy zarzut już istnieje
+                        const existingIndex = selectedCharges.findIndex(c => c.id == chargeId);
+
+                        if (existingIndex >= 0) {
+                            // Zwiększ ilość
+                            selectedCharges[existingIndex].quantity += quantity;
+                        } else {
+                            // Dodaj nowy zarzut
+                            const charge = availableCharges.find(c => c.id == chargeId);
+                            if (charge) {
+                                selectedCharges.push({
+                                    id: charge.id,
+                                    code: charge.code,
+                                    nazwa: charge.nazwa,
+                                    kara_pieniezna: parseFloat(charge.kara_pieniezna),
+                                    miesiace_odsiadki: parseInt(charge.miesiace_odsiadki),
+                                    quantity: quantity
+                                });
+                            }
+                        }
+                    });
+
+                    updateSelectedItems();
+                    updateTotals();
+                    updateSaveButton();
+                    updateChargeStates();
+                }
+            }
         }
     }
 
