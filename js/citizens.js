@@ -1060,20 +1060,73 @@
             if (data.success) {
                 activeWarrants = data.warrants || [];
                 renderActiveWarrants();
+                updateWarrantsInfoInHeader();
             } else {
+                activeWarrants = [];
                 const container = document.getElementById('activeWarrants');
                 if (container) {
                     container.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 20px 16px; font-style: italic; font-size: 14px;">Brak aktywnych poszukiwań</div>';
                 }
+                updateWarrantsInfoInHeader();
             }
         })
         .catch(error => {
             console.error('Error loading warrants:', error);
+            activeWarrants = [];
             const container = document.getElementById('activeWarrants');
             if (container) {
                 container.innerHTML = '<div style="color: #dc2626; text-align: center; padding: 20px 16px; font-size: 14px;">Błąd ładowania poszukiwań</div>';
             }
+            updateWarrantsInfoInHeader();
         });
+    }
+
+    function updateWarrantsInfoInHeader() {
+        const infoContainer = document.getElementById('activeWarrantsInfo');
+        if (!infoContainer) return;
+
+        if (activeWarrants.length === 0) {
+            infoContainer.innerHTML = '';
+            return;
+        }
+
+        // Oblicz sumy z poszukiwań
+        let totalFine = 0;
+        let totalMonths = 0;
+
+        activeWarrants.forEach(warrant => {
+            if (warrant.zarzuty_details) {
+                warrant.zarzuty_details.forEach(charge => {
+                    const fine = parseFloat(charge.kara_pieniezna) || 0;
+                    const months = parseInt(charge.miesiace_odsiadki) || 0;
+                    const quantity = parseInt(charge.ilosc) || 1;
+
+                    totalFine += fine * quantity;
+                    totalMonths += months * quantity;
+                });
+            }
+        });
+
+        const warrantCount = activeWarrants.length;
+        const warrantText = warrantCount === 1 ? 'poszukiwanie' : warrantCount < 5 ? 'poszukiwania' : 'poszukiwań';
+
+        infoContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 8px; padding: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #f59e0b;">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,9V11H13V9H11M11,13V17H13V13H11Z"/>
+                    </svg>
+                    <span style="color: #92400e; font-weight: 600; font-size: 14px;">
+                        Obywatel ma ${warrantCount} aktywne ${warrantText}
+                    </span>
+                </div>
+                <div style="color: #92400e; font-size: 13px; margin-left: 28px;">
+                    <strong>Sumy z poszukiwań:</strong> $${totalFine.toFixed(2)} | ${totalMonths} miesięcy
+                    <br>
+                    <span style="font-size: 12px; opacity: 0.9;">💡 Te sumy są JUŻ wliczone w całkowite statystyki obywatela</span>
+                </div>
+            </div>
+        `;
     }
 
     function renderActiveWarrants() {

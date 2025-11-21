@@ -234,20 +234,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $stmt = $pdo->prepare("
                     SELECT o.*,
-                           COUNT(w.id) as wyroki_count,
-                           COUNT(CASE WHEN ha.typ = 'notatka' THEN 1 END) as notatki_count,
-                           COUNT(CASE WHEN ha.typ = 'poszukiwanie' THEN 1 END) as poszukiwania_count,
+                           COUNT(DISTINCT w.id) as wyroki_count,
+                           COUNT(DISTINCT CASE WHEN ha.typ = 'notatka' THEN ha.id END) as notatki_count,
                            COALESCE(SUM(w.laczna_kara), 0) as suma_kar,
                            COALESCE(SUM(w.wyrok_miesiace), 0) as laczne_miesiace,
                            FLOOR(DATEDIFF(CURDATE(), o.data_urodzenia) / 365) as wiek
                     FROM obywatele o
                     LEFT JOIN wyroki w ON o.id = w.obywatel_id
-                    LEFT JOIN historia_aktywnosci ha ON o.id = ha.obywatel_id AND ha.typ IN ('notatka', 'poszukiwanie')
+                    LEFT JOIN historia_aktywnosci ha ON o.id = ha.obywatel_id AND ha.typ = 'notatka'
                     WHERE o.id = ?
                     GROUP BY o.id
                 ");
                 $stmt->execute([$id]);
                 $citizen = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                // Policz aktywne poszukiwania z tabeli poszukiwane_zarzuty
+                if ($citizen) {
+                    $stmt = $pdo->prepare("
+                        SELECT COUNT(*) as count
+                        FROM poszukiwane_zarzuty
+                        WHERE obywatel_id = ? AND status = 'aktywne'
+                    ");
+                    $stmt->execute([$id]);
+                    $warrant_count = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $citizen['poszukiwania_count'] = $warrant_count['count'];
+                }
 
                 // Dodaj sumy z aktywnych poszukiwań
                 if ($citizen) {
@@ -299,22 +310,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Pobierz notatki
                     $stmt = $pdo->prepare("
                         SELECT *, DATE_FORMAT(data, '%Y-%m-%d %H:%i:%s') as formatted_date
-                        FROM historia_aktywnosci 
+                        FROM historia_aktywnosci
                         WHERE obywatel_id = ? AND typ = 'notatka'
                         ORDER BY data DESC
                     ");
                     $stmt->execute([$id]);
                     $citizen['notatki'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    // Pobierz poszukiwania
+
+                    // Pobierz TYLKO AKTYWNE poszukiwania z tabeli poszukiwane_zarzuty
                     $stmt = $pdo->prepare("
-                        SELECT *, DATE_FORMAT(data, '%Y-%m-%d %H:%i:%s') as formatted_date
-                        FROM historia_aktywnosci 
-                        WHERE obywatel_id = ? AND typ = 'poszukiwanie'
-                        ORDER BY data DESC
+                        SELECT pz.id, pz.zarzuty_json, pz.priorytet, pz.szczegoly, pz.funkcjonariusz,
+                               DATE_FORMAT(pz.data_utworzenia, '%Y-%m-%d %H:%i:%s') as formatted_date,
+                               pz.data_utworzenia as data,
+                               'poszukiwanie' as typ
+                        FROM poszukiwane_zarzuty pz
+                        WHERE pz.obywatel_id = ? AND pz.status = 'aktywne'
+                        ORDER BY pz.data_utworzenia DESC
                     ");
                     $stmt->execute([$id]);
-                    $citizen['poszukiwania'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $warrants_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // Formatuj poszukiwania do tego samego formatu co historia_aktywnosci
+                    $citizen['poszukiwania'] = [];
+                    foreach ($warrants_raw as $warrant) {
+                        $charges = json_decode($warrant['zarzuty_json'], true);
+                        $charge_names = [];
+                        foreach ($charges as $charge_data) {
+                            $stmt = $pdo->prepare("SELECT code, nazwa FROM wyroki2 WHERE id = ?");
+                            $stmt->execute([$charge_data['id']]);
+                            $ch = $stmt->fetch(PDO::FETCH_ASSOC);
+                            if ($ch) {
+                                $charge_names[] = $ch['code'] . ' - ' . $ch['nazwa'] . ($charge_data['quantity'] > 1 ? " (x{$charge_data['quantity']})" : '');
+                            }
+                        }
+
+                        $priority_text = '';
+                        if ($warrant['priorytet'] === 'high') {
+                            $priority_text = "[WYSOKI PRIORYTET] ";
+                        } elseif ($warrant['priorytet'] === 'low') {
+                            $priority_text = "[NISKI PRIORYTET] ";
+                        }
+
+                        $opis = $priority_text . "POSZUKIWANY: " . implode(', ', $charge_names);
+                        if (!empty($warrant['szczegoly'])) {
+                            $opis .= " - " . $warrant['szczegoly'];
+                        }
+
+                        $citizen['poszukiwania'][] = [
+                            'id' => $warrant['id'],
+                            'opis' => $opis,
+                            'funkcjonariusz' => $warrant['funkcjonariusz'],
+                            'formatted_date' => $warrant['formatted_date'],
+                            'data' => $warrant['data'],
+                            'typ' => 'poszukiwanie'
+                        ];
+                    }
                     
                     // Pobierz pojazdy
                     $stmt = $pdo->prepare("SHOW TABLES LIKE 'pojazdy'");
@@ -2723,9 +2773,10 @@ try {
                 </svg>
             </button>
             
-            <div class="verdict-modal-header">
+            <div class="verdict-modal-header" id="verdictModalHeader">
                 <h3 class="verdict-modal-title">Dodawanie wyroku/mandatu</h3>
                 <p class="verdict-modal-subtitle">Wybierz zarzuty z listy kodów VC (0 miesięcy = mandat)</p>
+                <div id="activeWarrantsInfo" style="margin-top: 12px;"></div>
             </div>
             
             <div class="verdict-modal-body">
