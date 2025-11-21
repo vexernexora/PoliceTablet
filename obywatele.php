@@ -209,9 +209,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'get_citizen':
             try {
                 $id = intval($_POST['id']);
-                
+
                 $stmt = $pdo->prepare("
-                    SELECT o.*, 
+                    SELECT o.*,
                            COUNT(w.id) as wyroki_count,
                            COUNT(CASE WHEN ha.typ = 'notatka' THEN 1 END) as notatki_count,
                            COUNT(CASE WHEN ha.typ = 'poszukiwanie' THEN 1 END) as poszukiwania_count,
@@ -226,6 +226,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$id]);
                 $citizen = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                // Dodaj sumy z aktywnych poszukiwań
+                if ($citizen) {
+                    $stmt = $pdo->prepare("
+                        SELECT zarzuty_json
+                        FROM poszukiwane_zarzuty
+                        WHERE obywatel_id = ? AND status = 'aktywne'
+                    ");
+                    $stmt->execute([$id]);
+                    $active_warrants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    $warrant_total_fine = 0;
+                    $warrant_total_months = 0;
+
+                    foreach ($active_warrants as $warrant) {
+                        $charges = json_decode($warrant['zarzuty_json'], true);
+                        if (is_array($charges)) {
+                            foreach ($charges as $charge_data) {
+                                $charge_id = $charge_data['id'];
+                                $quantity = $charge_data['quantity'];
+
+                                $stmt = $pdo->prepare("SELECT kara_pieniezna, miesiace_odsiadki FROM wyroki2 WHERE id = ?");
+                                $stmt->execute([$charge_id]);
+                                $charge = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                                if ($charge) {
+                                    $warrant_total_fine += floatval($charge['kara_pieniezna']) * $quantity;
+                                    $warrant_total_months += intval($charge['miesiace_odsiadki']) * $quantity;
+                                }
+                            }
+                        }
+                    }
+
+                    $citizen['suma_kar'] = floatval($citizen['suma_kar']) + $warrant_total_fine;
+                    $citizen['laczne_miesiace'] = intval($citizen['laczne_miesiace']) + $warrant_total_months;
+                }
                 
                 if ($citizen) {
                     // Pobierz wyroki
@@ -649,14 +685,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($warrants as &$warrant) {
                     $zarzuty_data = json_decode($warrant['zarzuty_json'], true);
                     $warrant['zarzuty_details'] = [];
-                    
+
                     foreach ($zarzuty_data as $zarzut_item) {
                         $stmt = $pdo->prepare("SELECT * FROM wyroki2 WHERE id = ?");
                         $stmt->execute([$zarzut_item['id']]);
                         $zarzut = $stmt->fetch(PDO::FETCH_ASSOC);
-                        
+
                         if ($zarzut) {
                             $warrant['zarzuty_details'][] = [
+                                'id' => $zarzut['id'],
                                 'kod' => $zarzut['code'],
                                 'nazwa' => $zarzut['nazwa'],
                                 'opis' => $zarzut['opis'],
